@@ -128,8 +128,22 @@ QGCView {
                                 updateValueWhileDragging:   true
                                 activeFocusOnPress:         true
 
-                            } // Slider
+                                // Block wheel events
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.NoButton
+                                    onWheel: {
+                                        wheel.accepted = true
+                                    }
+                                }
+                                MultiPointTouchArea {
+                                    anchors.fill: parent
 
+                                    minimumTouchPoints: 1
+                                    maximumTouchPoints: 1
+                                    mouseEnabled:       false
+                                }
+                            } // Slider
                             QGCLabel {
                                 text:           param + "  " + Number(slider.value).toLocaleString(Qt.locale(), "f", 4) +
                                                 " |   step  " + Number(slider.stepSize).toLocaleString(Qt.locale(), "f", 4) +
