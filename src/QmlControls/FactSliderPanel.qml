@@ -124,7 +124,20 @@ QGCView {
                                         fact.value = value
                                     }
                                 }
+
+                                updateValueWhileDragging:   true
+                                activeFocusOnPress:         true
+
                             } // Slider
+
+                            QGCLabel {
+                                text:           param + "  " + Number(slider.value).toLocaleString(Qt.locale(), "f", 4) +
+                                                " |   step  " + Number(slider.stepSize).toLocaleString(Qt.locale(), "f", 4) +
+                                                " (requested " + Number(step).toLocaleString(Qt.locale(), "f", 4) + ")"
+                                anchors.left:   parent.left
+                                anchors.right:  parent.right
+                                wrapMode:       Text.WordWrap
+                            } // QGCLabel
                         } // Column
                     } // Rectangle
                 } // Repeater
