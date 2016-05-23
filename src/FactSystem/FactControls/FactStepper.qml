@@ -12,6 +12,10 @@ Item {
     property double stepSize: 0
     property double stepRatio: 0.1
 
+    property double minimumValue:       isNaN(fact.min) ? 0 : fact.min
+    property double maximumValue:       isNaN(fact.max) ? 1 : fact.max
+//    stepSize:           isNaN(fact.increment) ? step : fact.increment
+
     implicitWidth: 160
     implicitHeight: 34
 

@@ -129,6 +129,14 @@ QGCView {
                                 updateValueWhileDragging:   true
                                 activeFocusOnPress:         true
 
+                                MultiPointTouchArea {
+                                    anchors.fill: parent
+
+                                    minimumTouchPoints: 1
+                                    maximumTouchPoints: 1
+                                    mouseEnabled:       false
+                                }
+
                                 // Block wheel events
                                 MouseArea {
                                     anchors.fill: parent
@@ -137,19 +145,7 @@ QGCView {
                                         wheel.accepted = true
                                     }
                                 }
-                                MultiPointTouchArea {
-                                    anchors.fill: parent
-
-                                    minimumTouchPoints: 1
-                                    maximumTouchPoints: 1
-                                    mouseEnabled:       false
-                                }
                             } // Slider
-
-                            FactStepper {
-                                fact: slider.fact
-                                stepSize: step
-                            }
                         } // Column
                     } // Rectangle
                 } // Repeater

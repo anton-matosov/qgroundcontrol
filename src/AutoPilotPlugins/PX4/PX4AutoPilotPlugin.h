@@ -22,6 +22,7 @@
 #include "CameraComponent.h"
 #include "PowerComponent.h"
 #include "PX4TuningComponent.h"
+#include "PX4PIDTuningComponent.h"
 #include "Vehicle.h"
 
 #include <QImage>
@@ -51,6 +52,7 @@ public:
     CameraComponent*        cameraComponent(void)       { return _cameraComponent; }
     PowerComponent*         powerComponent(void)        { return _powerComponent; }
     PX4TuningComponent*     tuningComponent(void)       { return _tuningComponent; }
+    PX4PIDTuningComponent*  pidTuningComponent(void)    { return _pidTuningComponent; }
 
 public slots:
     // FIXME: This is public until we restructure AutoPilotPlugin/FirmwarePlugin/Vehicle
@@ -68,6 +70,7 @@ private:
     CameraComponent*        _cameraComponent;
     PowerComponent*         _powerComponent;
     PX4TuningComponent*     _tuningComponent;
+    PX4PIDTuningComponent*  _pidTuningComponent;
     bool                    _incorrectParameterVersion; ///< true: parameter version incorrect, setup not allowed
 };
 

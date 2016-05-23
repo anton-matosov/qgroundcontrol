@@ -47,6 +47,7 @@
         <file alias="QGroundControl/Controls/DropButton.qml">src/QmlControls/DropButton.qml</file>
         <file alias="QGroundControl/Controls/ExclusiveGroupItem.qml">src/QmlControls/ExclusiveGroupItem.qml</file>
         <file alias="QGroundControl/Controls/FactSliderPanel.qml">src/QmlControls/FactSliderPanel.qml</file>
+        <file alias="QGroundControl/Controls/FactStepperGroup.qml">src/QmlControls/FactStepperGroup.qml</file>
         <file alias="QGroundControl/Controls/IndicatorButton.qml">src/QmlControls/IndicatorButton.qml</file>
         <file alias="QGroundControl/Controls/JoystickThumbPad.qml">src/QmlControls/JoystickThumbPad.qml</file>
         <file alias="QGroundControl/Controls/MainToolBar.qml">src/ui/toolbar/MainToolBar.qml</file>
@@ -130,6 +131,8 @@
         <file alias="PX4RadioComponentSummary.qml">src/AutoPilotPlugins/PX4/PX4RadioComponentSummary.qml</file>
         <file alias="PX4TuningComponentCopter.qml">src/AutoPilotPlugins/PX4/PX4TuningComponentCopter.qml</file>
         <file alias="PX4TuningComponentPlane.qml">src/AutoPilotPlugins/PX4/PX4TuningComponentPlane.qml</file>
+        <file alias="PX4PIDTuningComponentCopter.qml">src/AutoPilotPlugins/PX4/PX4PIDTuningComponentCopter.qml</file>
+        <file alias="PX4PIDTuningComponentOther.qml">src/AutoPilotPlugins/PX4/PX4PIDTuningComponentOther.qml</file>
         <file alias="APMNotSupported.qml">src/AutoPilotPlugins/APM/APMNotSupported.qml</file>
         <file alias="APMCameraComponent.qml">src/AutoPilotPlugins/APM/APMCameraComponent.qml</file>
         <file alias="APMCameraComponentSummary.qml">src/AutoPilotPlugins/APM/APMCameraComponentSummary.qml</file>
