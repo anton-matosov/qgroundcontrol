@@ -12,6 +12,7 @@ import QtQuick              2.5
 import QtQuick.Controls     1.4
 
 import QGroundControl.FactSystem    1.0
+import QGroundControl.FactControls  1.0
 import QGroundControl.Palette       1.0
 import QGroundControl.Controls      1.0
 import QGroundControl.ScreenTools   1.0
@@ -144,14 +145,11 @@ QGCView {
                                     mouseEnabled:       false
                                 }
                             } // Slider
-                            QGCLabel {
-                                text:           param + "  " + Number(slider.value).toLocaleString(Qt.locale(), "f", 4) +
-                                                " |   step  " + Number(slider.stepSize).toLocaleString(Qt.locale(), "f", 4) +
-                                                " (requested " + Number(step).toLocaleString(Qt.locale(), "f", 4) + ")"
-                                anchors.left:   parent.left
-                                anchors.right:  parent.right
-                                wrapMode:       Text.WordWrap
-                            } // QGCLabel
+
+                            FactStepper {
+                                fact: slider.fact
+                                stepSize: step
+                            }
                         } // Column
                     } // Rectangle
                 } // Repeater
