@@ -42,9 +42,6 @@ QGCView {
     ///     ListElement {
     ///         title:          "Roll sensitivity"
     ///         param:          "MC_ROLL_TC"
-    ///         min:            0  ///< Optional, can use value from Fact created for 'param'. Value from Fact has precedence
-    ///         max:            100 ///< Optional, can use value from Fact created for 'param'. Value from Fact has precedence
-    ///         step:           1 ///< Optional, can use value from Fact created for 'param'. Value from Fact has precedence
     ///     }
     property ListModel steppersModel
 
@@ -57,14 +54,6 @@ QGCView {
     property bool _loadComplete: false
 
     Component.onCompleted: {
-//        var labelWidth = 0
-//        for (var i = 0; i < steppersModel.count; i++) {
-//            labelWidth = Math.max(labelWidth, stepperRepeater.itemAt(i).labelWidth)
-//        }
-//        for (i = 0; i < steppersModel.count; i++) {
-//            stepperRepeater.itemAt(i).labelLayoutWidth = labelWidth
-//        }
-
         _loadComplete = true
     }
 
@@ -105,11 +94,11 @@ QGCView {
                         height:             cellColumn.height + _thinMargins * 2
                         color:              palette.windowShade
 
-                        property Fact fact: controller.getParameterFact(-1, param)
+                        property Fact fact: param ? controller.getParameterFact(-1, param) : param
 
                         ColumnLayout {
-                            id: cellColumn
-                            spacing: _thinMargins
+                            id:                 cellColumn
+                            spacing:            _thinMargins
                             anchors.margins:    _thinMargins
                             anchors.left:       parent.left
                             anchors.right:      parent.right
@@ -118,32 +107,34 @@ QGCView {
                             property alias labelWidth: nameLabel.width
 
                             RowLayout {
-                                id: stepperRow
-                                spacing: _margins
-                                anchors.left:       parent.left
+                                id:             stepperRow
+                                spacing:        _margins
+                                anchors.left:   parent.left
 
                                 QGCLabel {
-                                    id: nameLabel
-                                    text:           (title && !title.isEmpty) ? title : fact.shortDescription
-                                    wrapMode:       Text.WordWrap
-                                    horizontalAlignment: Text.AlignRight
-                                    verticalAlignment: Text.AlignVCenter
+                                    id:                     nameLabel
+                                    text:                   (title && !title.isEmpty) ? title : fact.shortDescription
+                                    wrapMode:               Text.WordWrap
+                                    horizontalAlignment:    Text.AlignRight
+                                    verticalAlignment:      Text.AlignVCenter
 
-                                    Layout.minimumWidth: 100
-                                    Layout.maximumWidth: 100
+                                    Layout.minimumWidth: 80
+                                    Layout.maximumWidth: 80
                                 }
 
                                 FactStepper {
                                     id: stepper
+                                    visible: fact
 
                                     fact: stepperRect.fact
                                 }
 
                                 QGCButton {
-                                    id: _tooltipButton
+                                    id:         _tooltipButton
+                                    visible:    fact
 
-                                    text:     "?"
-                                    tooltip:  fact.longDescription
+                                    text:       "?"
+                                    tooltip:    fact.longDescription
 
                                     onClicked: {
                                         descriptionLabel.visible = !descriptionLabel.visible

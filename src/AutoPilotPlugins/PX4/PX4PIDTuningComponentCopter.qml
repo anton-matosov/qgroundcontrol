@@ -28,11 +28,15 @@ import QGroundControl.Controls  1.0
 
 FactStepperGroup {
     anchors.fill: parent
-    panelTitle:     "PID Tuning"
+    panelTitle:   "PID Tuning"
 
     steppersModel: ListModel {
 
 ///////////////////////////////////////////////////////////////
+        ListElement {
+            title:          qsTr("Roll")
+        }
+
         ListElement {
             title:          qsTr("Roll P")
             param:          "MC_ROLL_P"
@@ -58,6 +62,9 @@ FactStepperGroup {
         }
 
 ///////////////////////////////////////////////////////////////
+        ListElement {
+            title:          qsTr("Pitch")
+        }
 
         ListElement {
             title:          qsTr("Pitch P")
@@ -84,6 +91,9 @@ FactStepperGroup {
         }
 
 ///////////////////////////////////////////////////////////////
+        ListElement {
+            title:          qsTr("Yaw")
+        }
 
         ListElement {
             title:          qsTr("Yaw P")
