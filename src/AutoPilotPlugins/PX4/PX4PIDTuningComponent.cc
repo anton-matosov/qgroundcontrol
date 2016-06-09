@@ -43,7 +43,7 @@ QString PX4PIDTuningComponent::description(void) const
 
 QString PX4PIDTuningComponent::iconResource(void) const
 {
-    return "/qmlimages/TuningComponentIcon.png";
+    return "/qmlimages/PIDTuningComponentIcon.png";
 }
 
 bool PX4PIDTuningComponent::requiresSetup(void) const
