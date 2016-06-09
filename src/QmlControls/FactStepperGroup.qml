@@ -52,6 +52,7 @@ QGCView {
 
     QGCPalette { id: palette; colorGroupEnabled: enabled }
     property real _margins: ScreenTools.defaultFontPixelHeight
+    property real _thinMargins: ScreenTools.smallFontPointSize
 
     property bool _loadComplete: false
 
@@ -82,7 +83,7 @@ QGCView {
                 anchors.margins:    _margins
                 anchors.left:       parent.left
                 anchors.right:      parent.right
-                spacing:            _margins
+                spacing:            2
 
                 QGCLabel {
                     id:             panelLabel
@@ -101,15 +102,15 @@ QGCView {
                         id:                 stepperRect
                         anchors.left:       parent.left
                         anchors.right:      parent.right
-                        height:             cellColumn.height + _margins * 2
+                        height:             cellColumn.height + _thinMargins * 2
                         color:              palette.windowShade
 
                         property Fact fact: controller.getParameterFact(-1, param)
 
                         ColumnLayout {
                             id: cellColumn
-                            spacing: _margins
-                            anchors.margins:    _margins
+                            spacing: _thinMargins
+                            anchors.margins:    _thinMargins
                             anchors.left:       parent.left
                             anchors.right:      parent.right
                             anchors.top:        parent.top
@@ -119,10 +120,7 @@ QGCView {
                             RowLayout {
                                 id: stepperRow
                                 spacing: _margins
-//                                anchors.margins:    _margins
-//                                anchors.top:        stepperRect.top
                                 anchors.left:       parent.left
-//                                anchors.right:      parent.right
 
                                 QGCLabel {
                                     id: nameLabel
