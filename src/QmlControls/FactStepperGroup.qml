@@ -23,6 +23,9 @@
 
 import QtQuick              2.5
 import QtQuick.Controls     1.4
+import QtQuick.Layouts      1.2
+import QtQuick.Controls.Styles 1.2
+import QtQuick.Controls.Private 1.0
 
 import QGroundControl.FactSystem    1.0
 import QGroundControl.FactControls  1.0
@@ -53,13 +56,13 @@ QGCView {
     property bool _loadComplete: false
 
     Component.onCompleted: {
-        var labelWidth = 0
-        for (var i = 0; i < steppersModel.count; i++) {
-            labelWidth = Math.max(labelWidth, stepperRepeater.itemAt(i).labelWidth)
-        }
-        for (i = 0; i < steppersModel.count; i++) {
-            stepperRepeater.itemAt(i).labelWidth = labelWidth
-        }
+//        var labelWidth = 0
+//        for (var i = 0; i < steppersModel.count; i++) {
+//            labelWidth = Math.max(labelWidth, stepperRepeater.itemAt(i).labelWidth)
+//        }
+//        for (i = 0; i < steppersModel.count; i++) {
+//            stepperRepeater.itemAt(i).labelLayoutWidth = labelWidth
+//        }
 
         _loadComplete = true
     }
@@ -91,29 +94,75 @@ QGCView {
                     id:     stepperRepeater
                     model:  steppersModel
 
-                    Row {
-                        spacing: _margins
-                        height: stepper.height
+                    anchors.left:       parent.left
+                    anchors.right:      parent.right
 
-                        property alias labelWidth: label.width
+                    Rectangle {
+                        id:                 stepperRect
+                        anchors.left:       parent.left
+                        anchors.right:      parent.right
+                        height:             cellColumn.height + _margins * 2
+                        color:              palette.windowShade
 
-                        QGCLabel {
-                            id: label
-                            text:           title.isEmpty ? param : title
-                            wrapMode:       Text.WordWrap
-                            horizontalAlignment: Text.AlignRight
-                            verticalAlignment: Text.AlignVCenter
-                            height:         stepper.height
-                        }
+                        property Fact fact: controller.getParameterFact(-1, param)
 
-                        FactStepper {
-                            id: stepper
+                        ColumnLayout {
+                            id: cellColumn
+                            spacing: _margins
+                            anchors.margins:    _margins
+                            anchors.left:       parent.left
+                            anchors.right:      parent.right
+                            anchors.top:        parent.top
 
-                            fact: controller.getParameterFact(-1, param)
+                            property alias labelWidth: nameLabel.width
 
-                            minimumValue:       isNaN(fact.min) ? min : fact.min
-                            maximumValue:       isNaN(fact.max) ? max : fact.max
-                            stepSize:           isNaN(fact.increment) ? step : fact.increment
+                            RowLayout {
+                                id: stepperRow
+                                spacing: _margins
+//                                anchors.margins:    _margins
+//                                anchors.top:        stepperRect.top
+                                anchors.left:       parent.left
+//                                anchors.right:      parent.right
+
+                                QGCLabel {
+                                    id: nameLabel
+                                    text:           (title && !title.isEmpty) ? title : fact.shortDescription
+                                    wrapMode:       Text.WordWrap
+                                    horizontalAlignment: Text.AlignRight
+                                    verticalAlignment: Text.AlignVCenter
+
+                                    Layout.minimumWidth: 100
+                                    Layout.maximumWidth: 100
+                                }
+
+                                FactStepper {
+                                    id: stepper
+
+                                    fact: stepperRect.fact
+                                }
+
+                                QGCButton {
+                                    id: _tooltipButton
+
+                                    text:     "?"
+                                    tooltip:  fact.longDescription
+
+                                    onClicked: {
+                                        descriptionLabel.visible = !descriptionLabel.visible
+                                    }
+                                }
+                            }
+
+                            QGCLabel {
+                                id: descriptionLabel
+
+                                Layout.fillWidth: true
+
+                                visible:        false
+                                text:           fact.longDescription
+                                wrapMode:       Text.WordWrap
+                                horizontalAlignment: Text.AlignLeft
+                            }
                         }
                     }
                 }

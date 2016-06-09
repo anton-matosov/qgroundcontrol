@@ -9,20 +9,19 @@ import QGroundControl.Controls 1.0
 Item {
     property bool enabled: true
     property alias fact: factInput.fact
-    property double stepSize: 0
-    property double stepRatio: 0.1
 
     property double minimumValue:       isNaN(fact.min) ? 0 : fact.min
     property double maximumValue:       isNaN(fact.max) ? 1 : fact.max
-//    stepSize:           isNaN(fact.increment) ? step : fact.increment
+    property double stepSize:           isNaN(fact.increment) ? 0 : fact.increment
+    property double stepRatio:          0.1
 
     implicitWidth: 160
     implicitHeight: 34
 
     function incrementWithScale(multiplier) {
-        step = stepSize;
+        var step = stepSize;
         if (step == 0) {
-            step = abs(stepRatio * fact.value);
+            step = Math.abs(stepRatio * fact.value);
         }
 
         var newValue = fact.value + (step * multiplier);
@@ -35,7 +34,7 @@ Item {
         }
 
         fact.value = newValue;
-        factInput.text = fact.valueString //Number(newValue).toLocaleString(Qt.locale(), "f", 4);
+        factInput.text = fact.valueString
     }
 
     Row {

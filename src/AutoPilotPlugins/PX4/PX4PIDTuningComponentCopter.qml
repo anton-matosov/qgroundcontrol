@@ -31,114 +31,86 @@ FactStepperGroup {
     panelTitle:     "PID Tuning"
 
     steppersModel: ListModel {
-        // PID Tuning
+
+///////////////////////////////////////////////////////////////
         ListElement {
-            title:          qsTr("MC_ROLL_P")
-            description:    qsTr("")
+            title:          qsTr("Roll P")
             param:          "MC_ROLL_P"
-            min:            0.
-            max:            10.
-            step:           0.01
         }
 
         ListElement {
-            title:          qsTr("MC_PITCH_P")
-            description:    qsTr("")
-            param:          "MC_PITCH_P"
-            min:            0.
-            max:            10.
-            step:           0.01
-        }
-
-        ListElement {
-            title:          qsTr("MC_YAW_P")
-            description:    qsTr("")
-            param:          "MC_YAW_P"
-            min:            0.
-            max:            10.
-            step:           0.01
-        }
-
-        ListElement {
-            title:          qsTr("MC_ROLLRATE_P")
-            description:    qsTr("")
+            title:          qsTr("Roll Rate P")
             param:          "MC_ROLLRATE_P"
-            min:            0
-            max:            0.3
-            step:           0.005
         }
 
         ListElement {
-            title:          qsTr("MC_PITCHRATE_P")
-            description:    qsTr("")
-            param:          "MC_PITCHRATE_P"
-            min:            0
-            max:            0.3
-            step:           0.005
-        }
-
-        ListElement {
-            title:          qsTr("MC_ROLLRATE_I")
-            description:    qsTr("")
+            title:          qsTr("Roll Rate I")
             param:          "MC_ROLLRATE_I"
-            min:            0
-            max:            0.3
-            step:           0.005
         }
 
         ListElement {
-            title:          qsTr("MC_PITCHRATE_I")
-            description:    qsTr("")
-            param:          "MC_PITCHRATE_I"
-            min:            0
-            max:            0.3
-            step:           0.005
-        }
-
-        ListElement {
-            title:          qsTr("MC_ROLLRATE_D")
-            description:    qsTr("")
+            title:          qsTr("Roll Rate D")
             param:          "MC_ROLLRATE_D"
-            min:            0
-            max:            0.01
-            step:           0.0001
         }
 
         ListElement {
-            title:          qsTr("MC_PITCHRATE_D")
-            description:    qsTr("")
+            param:          "MC_ROLLRATE_FF"
+        }
+
+///////////////////////////////////////////////////////////////
+
+        ListElement {
+            title:          qsTr("Pitch P")
+            param:          "MC_PITCH_P"
+        }
+
+        ListElement {
+            title:          qsTr("Pitch Rate P")
+            param:          "MC_PITCHRATE_P"
+        }
+
+        ListElement {
+            title:          qsTr("Pitch Rate I")
+            param:          "MC_PITCHRATE_I"
+        }
+
+        ListElement {
+            title:          qsTr("Pitch Rate D")
             param:          "MC_PITCHRATE_D"
-            min:            0
-            max:            0.01
-            step:           0.0001
         }
 
+        ListElement {
+            param:          "MC_PITCHRATE_FF"
+        }
+
+///////////////////////////////////////////////////////////////
 
         ListElement {
-            title:          qsTr("MC_YAWRATE_P")
-            description:    qsTr("")
+            title:          qsTr("Yaw P")
+            param:          "MC_YAW_P"
+        }
+
+        ListElement {
+            param:          "MC_YAW_FF"
+        }
+
+        ListElement {
+            title:          qsTr("Yaw Rate P")
             param:          "MC_YAWRATE_P"
-            min:            0
-            max:            0.3
-            step:           0.01
         }
 
         ListElement {
-            title:          qsTr("MC_YAWRATE_I")
-            description:    qsTr("")
+            title:          qsTr("Yaw Rate I")
             param:          "MC_YAWRATE_I"
-            min:            0
-            max:            0.3
-            step:           0.005
         }
 
         ListElement {
-            title:          qsTr("MC_YAWRATE_D")
-            description:    qsTr("")
+            title:          qsTr("Yaw Rate D")
             param:          "MC_YAWRATE_D"
-            min:            0
-            max:            0.01
-            step:           0.0001
+        }
+
+        ListElement {
+            param:          "MC_YAWRATE_FF"
         }
     }
 }
