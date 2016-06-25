@@ -133,7 +133,6 @@ Vehicle::Vehicle(LinkInterface*             link,
 
     connect(_mavlink, &MAVLinkProtocol::messageReceived,     this, &Vehicle::_mavlinkMessageReceived);
 
-    connect(this, &Vehicle::_sendMessageOnThread,       this, &Vehicle::_sendMessage, Qt::QueuedConnection);
     connect(this, &Vehicle::_sendMessageOnLinkOnThread, this, &Vehicle::_sendMessageOnLink, Qt::QueuedConnection);
     connect(this, &Vehicle::flightModeChanged,          this, &Vehicle::_handleFlightModeChanged);
     connect(this, &Vehicle::armedChanged,               this, &Vehicle::_announceArmedChanged);
@@ -196,8 +195,8 @@ Vehicle::Vehicle(LinkInterface*             link,
     connect(_parameterLoader, &ParameterLoader::parametersReady, _autopilotPlugin, &AutoPilotPlugin::_parametersReadyPreChecks);
     connect(_parameterLoader, &ParameterLoader::parameterListProgress, _autopilotPlugin, &AutoPilotPlugin::parameterListProgress);
 
-    // Ask the vehicle for firmware version info
-    doCommandLong(defaultComponentId(), MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES, 1 /* request firmware version */);
+    // Ask the vehicle for firmware version info. This must be MAV_COMP_ID_ALL since we don't know default component id yet.
+    doCommandLong(MAV_COMP_ID_ALL, MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES, 1 /* request firmware version */);
 
     _firmwarePlugin->initializeVehicle(this);
 
@@ -467,6 +466,11 @@ void Vehicle::_handleCommandAck(mavlink_message_t& message)
     mavlink_msg_command_ack_decode(&message, &ack);
 
     emit commandLongAck(message.compid, ack.command, ack.result);
+
+    if (ack.command == MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES) {
+        // Disregard failures
+        return;
+    }
 
     QString commandName;
     MavCmdInfo* cmdInfo = qgcApp()->toolbox()->missionCommands()->getMavCmdInfo((MAV_CMD)ack.command, this);
@@ -766,11 +770,6 @@ void Vehicle::_linkInactiveOrDeleted(LinkInterface* link)
     }
 }
 
-void Vehicle::sendMessage(mavlink_message_t message)
-{
-    emit _sendMessageOnThread(message);
-}
-
 bool Vehicle::sendMessageOnLink(LinkInterface* link, mavlink_message_t message)
 {
     if (!link || !_links.contains(link) || !link->isConnected()) {
@@ -793,7 +792,7 @@ void Vehicle::_sendMessageOnLink(LinkInterface* link, mavlink_message_t message)
     _firmwarePlugin->adjustOutgoingMavlinkMessage(this, &message);
 
     static const uint8_t messageKeys[256] = MAVLINK_MESSAGE_CRCS;
-    mavlink_finalize_message_chan(&message, _mavlink->getSystemId(), _mavlink->getComponentId(), link->getMavlinkChannel(), message.len, messageKeys[message.msgid]);
+    mavlink_finalize_message_chan(&message, _mavlink->getSystemId(), _mavlink->getComponentId(), link->getMavlinkChannel(), message.len, message.len, messageKeys[message.msgid]);
 
     // Write message into buffer, prepending start sign
     uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
@@ -802,16 +801,6 @@ void Vehicle::_sendMessageOnLink(LinkInterface* link, mavlink_message_t message)
     link->writeBytesSafe((const char*)buffer, len);
     _messagesSent++;
     emit messagesSentChanged();
-}
-
-void Vehicle::_sendMessage(mavlink_message_t message)
-{
-    // Emit message on all links that are currently connected
-    foreach (LinkInterface* link, _links) {
-        if (link->isConnected()) {
-            _sendMessageOnLink(link, message);
-        }
-    }
 }
 
 /// @return Direct usb connection link to board if one, NULL if none
@@ -1057,7 +1046,10 @@ void Vehicle::_loadSettings(void)
         _joystickMode = JoystickModeRC;
     }
 
-    _joystickEnabled = settings.value(_joystickEnabledSettingsKey, false).toBool();
+    // Joystick enabled is a global setting so first make sure there are any joysticks connected
+    if (qgcApp()->toolbox()->joystickManager()->joysticks().count()) {
+        _joystickEnabled = settings.value(_joystickEnabledSettingsKey, false).toBool();
+    }
 }
 
 void Vehicle::_saveSettings(void)
@@ -1162,11 +1154,11 @@ void Vehicle::setArmed(bool armed)
     cmd.param6 = 0.0f;
     cmd.param7 = 0.0f;
     cmd.target_system = id();
-    cmd.target_component = 0;
+    cmd.target_component = defaultComponentId();
 
     mavlink_msg_command_long_encode(_mavlink->getSystemId(), _mavlink->getComponentId(), &msg, &cmd);
 
-    sendMessage(msg);
+    sendMessageOnPriorityLink(msg);
 }
 
 bool Vehicle::flightModeSetAvailable(void)
@@ -1197,7 +1189,7 @@ void Vehicle::setFlightMode(const QString& flightMode)
 
         mavlink_message_t msg;
         mavlink_msg_set_mode_pack(_mavlink->getSystemId(), _mavlink->getComponentId(), &msg, id(), newBaseMode, custom_mode);
-        sendMessage(msg);
+        sendMessageOnPriorityLink(msg);
     } else {
         qWarning() << "FirmwarePlugin::setFlightMode failed, flightMode:" << flightMode;
     }
@@ -1218,7 +1210,7 @@ void Vehicle::setHilMode(bool hilMode)
     }
 
     mavlink_msg_set_mode_pack(_mavlink->getSystemId(), _mavlink->getComponentId(), &msg, id(), newBaseMode, _custom_mode);
-    sendMessage(msg);
+    sendMessageOnPriorityLink(msg);
 }
 
 bool Vehicle::missingParameters(void)
@@ -1235,7 +1227,7 @@ void Vehicle::requestDataStream(MAV_DATA_STREAM stream, uint16_t rate, bool send
     dataStream.req_message_rate = rate;
     dataStream.start_stop = 1;  // start
     dataStream.target_system = id();
-    dataStream.target_component = 0;
+    dataStream.target_component = defaultComponentId();
 
     mavlink_msg_request_data_stream_encode(_mavlink->getSystemId(), _mavlink->getComponentId(), &msg, &dataStream);
 
@@ -1243,7 +1235,7 @@ void Vehicle::requestDataStream(MAV_DATA_STREAM stream, uint16_t rate, bool send
         // We use sendMessageMultiple since we really want these to make it to the vehicle
         sendMessageMultiple(msg);
     } else {
-        sendMessage(msg);
+        sendMessageOnPriorityLink(msg);
     }
 }
 
@@ -1252,7 +1244,7 @@ void Vehicle::_sendMessageMultipleNext(void)
     if (_nextSendMessageMultipleIndex < _sendMessageMultipleList.count()) {
         qCDebug(VehicleLog) << "_sendMessageMultipleNext:" << _sendMessageMultipleList[_nextSendMessageMultipleIndex].message.msgid;
 
-        sendMessage(_sendMessageMultipleList[_nextSendMessageMultipleIndex].message);
+        sendMessageOnPriorityLink(_sendMessageMultipleList[_nextSendMessageMultipleIndex].message);
 
         if (--_sendMessageMultipleList[_nextSendMessageMultipleIndex].retryCount <= 0) {
             _sendMessageMultipleList.removeAt(_nextSendMessageMultipleIndex);
@@ -1411,6 +1403,11 @@ void Vehicle::_say(const QString& text)
 bool Vehicle::fixedWing(void) const
 {
     return vehicleType() == MAV_TYPE_FIXED_WING;
+}
+
+bool Vehicle::rover(void) const
+{
+    return vehicleType() == MAV_TYPE_GROUND_ROVER;
 }
 
 bool Vehicle::multiRotor(void) const
@@ -1610,10 +1607,10 @@ void Vehicle::emergencyStop(void)
     cmd.param6 = 0.0f;
     cmd.param7 = 0.0f;
     cmd.target_system = id();
-    cmd.target_component = 0;
+    cmd.target_component = defaultComponentId();
     mavlink_msg_command_long_encode(_mavlink->getSystemId(), _mavlink->getComponentId(), &msg, &cmd);
 
-    sendMessage(msg);
+    sendMessageOnPriorityLink(msg);
 }
 
 void Vehicle::setCurrentMissionSequence(int seq)
@@ -1623,7 +1620,7 @@ void Vehicle::setCurrentMissionSequence(int seq)
     }
     mavlink_message_t msg;
     mavlink_msg_mission_set_current_pack(_mavlink->getSystemId(), _mavlink->getComponentId(), &msg, id(), _compID, seq);
-    sendMessage(msg);
+    sendMessageOnPriorityLink(msg);
 }
 
 void Vehicle::doCommandLong(int component, MAV_CMD command, float param1, float param2, float param3, float param4, float param5, float param6, float param7)
@@ -1644,7 +1641,7 @@ void Vehicle::doCommandLong(int component, MAV_CMD command, float param1, float 
     cmd.target_component = component;
     mavlink_msg_command_long_encode(_mavlink->getSystemId(), _mavlink->getComponentId(), &msg, &cmd);
 
-    sendMessage(msg);
+    sendMessageOnPriorityLink(msg);
 }
 
 void Vehicle::setPrearmError(const QString& prearmError)
@@ -1692,7 +1689,7 @@ QString Vehicle::firmwareVersionTypeString(void) const
 
 void Vehicle::rebootVehicle()
 {
-    doCommandLong(id(), MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    doCommandLong(defaultComponentId(), MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 int Vehicle::defaultComponentId(void)
