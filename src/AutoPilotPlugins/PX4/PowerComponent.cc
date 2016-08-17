@@ -28,7 +28,7 @@ QString PowerComponent::name(void) const
 
 QString PowerComponent::description(void) const
 {
-    return tr("The Power Component is used to setup battery parameters as well as advanced settings for propellers and magnetometer.");
+    return tr("Power Setup is used to setup battery parameters as well as advanced settings for propellers.");
 }
 
 QString PowerComponent::iconResource(void) const
@@ -51,7 +51,10 @@ bool PowerComponent::setupComplete(void) const
 
 QStringList PowerComponent::setupCompleteChangedTriggerList(void) const
 {
-    return QStringList();
+    QStringList triggerList;
+
+    triggerList << "BAT_V_CHARGED" << "BAT_V_EMPTY" << "BAT_N_CELLS";
+    return triggerList;
 }
 
 QUrl PowerComponent::setupSource(void) const

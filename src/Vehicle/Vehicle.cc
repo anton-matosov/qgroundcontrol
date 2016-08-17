@@ -67,6 +67,8 @@ Vehicle::Vehicle(LinkInterface*             link,
     , _vehicleType(vehicleType)
     , _firmwarePlugin(NULL)
     , _autopilotPlugin(NULL)
+    , _mavlink(NULL)
+    , _soloFirmware(false)
     , _joystickMode(JoystickModeRC)
     , _joystickEnabled(false)
     , _uas(NULL)
@@ -196,7 +198,18 @@ Vehicle::Vehicle(LinkInterface*             link,
     connect(_parameterLoader, &ParameterLoader::parameterListProgress, _autopilotPlugin, &AutoPilotPlugin::parameterListProgress);
 
     // Ask the vehicle for firmware version info. This must be MAV_COMP_ID_ALL since we don't know default component id yet.
-    doCommandLong(MAV_COMP_ID_ALL, MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES, 1 /* request firmware version */);
+
+    mavlink_message_t       versionMsg;
+    mavlink_command_long_t  versionCmd;
+
+    versionCmd.command = MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES;
+    versionCmd.confirmation = 0;
+    versionCmd.param1 = 1; // Request firmware version
+    versionCmd.param2 = versionCmd.param3 = versionCmd.param4 = versionCmd.param5 = versionCmd.param6 = versionCmd.param7 = 0;
+    versionCmd.target_system = id();
+    versionCmd.target_component = MAV_COMP_ID_ALL;
+    mavlink_msg_command_long_encode(_mavlink->getSystemId(), _mavlink->getComponentId(), &versionMsg, &versionCmd);
+    sendMessageMultiple(versionMsg);
 
     _firmwarePlugin->initializeVehicle(this);
 
@@ -430,6 +443,9 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
     case MAVLINK_MSG_ID_AUTOPILOT_VERSION:
         _handleAutopilotVersion(message);
         break;
+    case MAVLINK_MSG_ID_WIND_COV:
+        _handleWindCov(message);
+        break;
 
     // Following are ArduPilot dialect messages
 
@@ -505,7 +521,7 @@ void Vehicle::_handleExtendedSysState(mavlink_message_t& message)
     mavlink_msg_extended_sys_state_decode(&message, &extendedState);
 
     switch (extendedState.landed_state) {
-        case MAV_LANDED_STATE_UNDEFINED:
+    case MAV_LANDED_STATE_UNDEFINED:
         break;
     case MAV_LANDED_STATE_ON_GROUND:
         setFlying(false);
@@ -527,6 +543,19 @@ void Vehicle::_handleVibration(mavlink_message_t& message)
     _vibrationFactGroup.clipCount1()->setRawValue(vibration.clipping_0);
     _vibrationFactGroup.clipCount2()->setRawValue(vibration.clipping_1);
     _vibrationFactGroup.clipCount3()->setRawValue(vibration.clipping_2);
+}
+
+void Vehicle::_handleWindCov(mavlink_message_t& message)
+{
+    mavlink_wind_cov_t wind;
+    mavlink_msg_wind_cov_decode(&message, &wind);
+
+    float direction = qRadiansToDegrees(qAtan2(wind.wind_y, wind.wind_x));
+    float speed = qSqrt(qPow(wind.wind_x, 2) + qPow(wind.wind_y, 2));
+
+    _windFactGroup.direction()->setRawValue(direction);
+    _windFactGroup.speed()->setRawValue(speed);
+    _windFactGroup.verticalSpeed()->setRawValue(0);
 }
 
 void Vehicle::_handleWind(mavlink_message_t& message)
@@ -887,6 +916,37 @@ void Vehicle::_updateNavigationControllerData(UASInterface *uas, float, float, f
     }
 }
 
+int Vehicle::motorCount(void)
+{
+    switch (_vehicleType) {
+    case MAV_TYPE_HELICOPTER:
+        return 1;
+    case MAV_TYPE_VTOL_DUOROTOR:
+        return 2;
+    case MAV_TYPE_TRICOPTER:
+        return 3;
+    case MAV_TYPE_QUADROTOR:
+    case MAV_TYPE_VTOL_QUADROTOR:
+        return 4;
+    case MAV_TYPE_HEXAROTOR:
+        return 6;
+    case MAV_TYPE_OCTOROTOR:
+        return 8;
+    default:
+        return -1;
+    }
+}
+
+bool Vehicle::coaxialMotors(void)
+{
+    return _firmwarePlugin->multiRotorCoaxialMotors(this);
+}
+
+bool Vehicle::xConfigMotors(void)
+{
+    return _firmwarePlugin->multiRotorXConfig(this);
+}
+
 /*
  * Internal
  */
@@ -1059,7 +1119,12 @@ void Vehicle::_saveSettings(void)
     settings.beginGroup(QString(_settingsGroup).arg(_id));
 
     settings.setValue(_joystickModeSettingsKey, _joystickMode);
-    settings.setValue(_joystickEnabledSettingsKey, _joystickEnabled);
+
+    // The joystick enabled setting should only be changed if a joystick is present
+    // since the checkbox can only be clicked if one is present
+    if (qgcApp()->toolbox()->joystickManager()->joysticks().count()) {
+        settings.setValue(_joystickEnabledSettingsKey, _joystickEnabled);
+    }
 }
 
 int Vehicle::joystickMode(void)
@@ -1163,7 +1228,7 @@ void Vehicle::setArmed(bool armed)
 
 bool Vehicle::flightModeSetAvailable(void)
 {
-    return _firmwarePlugin->isCapable(FirmwarePlugin::SetFlightModeCapability);
+    return _firmwarePlugin->isCapable(this, FirmwarePlugin::SetFlightModeCapability);
 }
 
 QStringList Vehicle::flightModes(void)
@@ -1277,6 +1342,10 @@ void Vehicle::_missionManagerError(int errorCode, const QString& errorMsg)
 void Vehicle::_addNewMapTrajectoryPoint(void)
 {
     if (_mapTrajectoryHaveFirstCoordinate) {
+        // Keep three minutes of trajectory
+        if (_mapTrajectoryList.count() * _mapTrajectoryMsecsBetweenPoints > 3 * 1000 * 60) {
+            _mapTrajectoryList.removeAt(0)->deleteLater();
+        }
         _mapTrajectoryList.append(new CoordinateVector(_mapTrajectoryLastCoordinate, _coordinate, this));
     }
     _mapTrajectoryHaveFirstCoordinate = true;
@@ -1410,6 +1479,11 @@ bool Vehicle::rover(void) const
     return vehicleType() == MAV_TYPE_GROUND_ROVER;
 }
 
+bool Vehicle::sub(void) const
+{
+    return vehicleType() == MAV_TYPE_SUBMARINE;
+}
+
 bool Vehicle::multiRotor(void) const
 {
     switch (vehicleType()) {
@@ -1439,6 +1513,26 @@ bool Vehicle::vtol(void) const
     default:
         return false;
     }
+}
+
+bool Vehicle::supportsManualControl(void) const
+{
+    return _firmwarePlugin->supportsManualControl();
+}
+
+bool Vehicle::supportsThrottleModeCenterZero(void) const
+{
+    return _firmwarePlugin->supportsThrottleModeCenterZero();
+}
+
+bool Vehicle::supportsRadio(void) const
+{
+    return _firmwarePlugin->supportsRadio();
+}
+
+bool Vehicle::supportsJSButton(void) const
+{
+    return _firmwarePlugin->supportsJSButton();
 }
 
 void Vehicle::_setCoordinateValid(bool coordinateValid)
@@ -1519,12 +1613,17 @@ void Vehicle::setFlying(bool flying)
 
 bool Vehicle::guidedModeSupported(void) const
 {
-    return _firmwarePlugin->isCapable(FirmwarePlugin::GuidedModeCapability);
+    return _firmwarePlugin->isCapable(this, FirmwarePlugin::GuidedModeCapability);
 }
 
 bool Vehicle::pauseVehicleSupported(void) const
 {
-    return _firmwarePlugin->isCapable(FirmwarePlugin::PauseVehicleCapability);
+    return _firmwarePlugin->isCapable(this, FirmwarePlugin::PauseVehicleCapability);
+}
+
+bool Vehicle::orbitModeSupported() const
+{
+    return _firmwarePlugin->isCapable(this, FirmwarePlugin::OrbitModeCapability);
 }
 
 void Vehicle::guidedModeRTL(void)
@@ -1571,6 +1670,15 @@ void Vehicle::guidedModeChangeAltitude(double altitudeRel)
         return;
     }
     _firmwarePlugin->guidedModeChangeAltitude(this, altitudeRel);
+}
+
+void Vehicle::guidedModeOrbit(const QGeoCoordinate& centerCoord, double radius, double velocity, double altitude)
+{
+    if (!orbitModeSupported()) {
+        qgcApp()->showMessage(QStringLiteral("Orbit mode not supported by Vehicle."));
+        return;
+    }
+    _firmwarePlugin->guidedModeOrbit(this, centerCoord, radius, velocity, altitude);
 }
 
 void Vehicle::pauseVehicle(void)
@@ -1696,6 +1804,22 @@ int Vehicle::defaultComponentId(void)
 {
     return _parameterLoader->defaultComponenentId();
 }
+
+void Vehicle::setSoloFirmware(bool soloFirmware)
+{
+    if (soloFirmware != _soloFirmware) {
+        _soloFirmware = soloFirmware;
+        emit soloFirmwareChanged(soloFirmware);
+    }
+}
+
+#if 0
+    // Temporarily removed, waiting for new command implementation
+void Vehicle::motorTest(int motor, int percent, int timeoutSecs)
+{
+    doCommandLong(defaultComponentId(), MAV_CMD_DO_MOTOR_TEST, motor, MOTOR_TEST_THROTTLE_PERCENT, percent, timeoutSecs);
+}
+#endif
 
 const char* VehicleGPSFactGroup::_hdopFactName =                "hdop";
 const char* VehicleGPSFactGroup::_vdopFactName =                "vdop";

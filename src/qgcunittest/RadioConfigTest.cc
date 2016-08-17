@@ -12,6 +12,9 @@
 #include "RadioComponentController.h"
 #include "MultiVehicleManager.h"
 #include "QGCApplication.h"
+#include "PX4/PX4AutoPilotPlugin.h"
+#include "APM/APMAutoPilotPlugin.h"
+#include "APM/APMRadioComponent.h"
 
 /// @file
 ///     @brief QRadioComponentController Widget unit test
@@ -190,12 +193,23 @@ void RadioConfigTest::_init(MAV_AUTOPILOT firmwareType)
     
     _autopilot = qgcApp()->toolbox()->multiVehicleManager()->activeVehicle()->autopilotPlugin();
     Q_ASSERT(_autopilot);
+
+    // This test is so quick that it tends to finish before the mission item protocol completes. This causes an error to pop up.
+    // So we wait a little to let mission items sync.
+    QTest::qWait(500);
     
     // This will instatiate the widget with an active uas with ready parameters
     _calWidget = new QGCQmlWidgetHolder(QString(), NULL);
     _calWidget->resize(600, 600);
     Q_CHECK_PTR(_calWidget);
     _calWidget->setAutoPilot(_autopilot);
+    QObject* vehicleComponent;
+    if (firmwareType == MAV_AUTOPILOT_PX4) {
+        vehicleComponent = dynamic_cast<QObject*>(dynamic_cast<PX4AutoPilotPlugin*>(_autopilot)->radioComponent());
+    } else {
+        vehicleComponent = dynamic_cast<QObject*>(dynamic_cast<APMAutoPilotPlugin*>(_autopilot)->radioComponent());
+    }
+    _calWidget->setContextPropertyObject("vehicleComponent", vehicleComponent);
     _calWidget->setSource(QUrl::fromUserInput("qrc:/qml/RadioComponent.qml"));
     
     // Nasty hack to get to controller
