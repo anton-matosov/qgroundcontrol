@@ -134,7 +134,7 @@ QGCView {
                                     visible:    fact
 
                                     text:       "?"
-                                    tooltip:    fact.longDescription
+                                    tooltip:    fact ? fact.longDescription : ""
 
                                     onClicked: {
                                         descriptionLabel.visible = !descriptionLabel.visible

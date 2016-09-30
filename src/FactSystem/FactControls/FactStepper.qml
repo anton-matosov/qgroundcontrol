@@ -67,7 +67,7 @@ Item {
             width : parent.width / 4
             height: parent.height
             text: "-"
-            enabled: factValue > fact.min
+            enabled: fact ? (factValue > fact.min) : false
 
             onClicked: {
                 incrementWithScale(-1)
@@ -116,7 +116,7 @@ Item {
             width : parent.width / 4
             height: parent.height
             text: "+"
-            enabled: factValue < fact.max
+            enabled: fact ? (factValue < fact.max) : false
 
             onClicked: {
                 incrementWithScale(1);
