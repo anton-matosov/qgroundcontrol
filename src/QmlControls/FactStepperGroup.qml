@@ -94,7 +94,13 @@ QGCView {
                         height:             cellColumn.height + _thinMargins * 2
                         color:              palette.windowShade
 
-                        property Fact fact: param ? controller.getParameterFact(-1, param) : param
+                        property Fact fact
+
+                        Component.onCompleted: {
+                            if (param) {
+                                fact = controller.getParameterFact(-1, param)
+                            }
+                        }
 
                         ColumnLayout {
                             id:                 cellColumn
@@ -148,7 +154,7 @@ QGCView {
                                 Layout.fillWidth: true
 
                                 visible:        false
-                                text:           fact.longDescription
+                                text:           fact ? fact.longDescription : ""
                                 wrapMode:       Text.WordWrap
                                 horizontalAlignment: Text.AlignLeft
                             }

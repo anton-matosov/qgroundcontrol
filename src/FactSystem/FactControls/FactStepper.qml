@@ -12,7 +12,7 @@ Item {
     property bool enabled: true
     property alias fact: factInput.fact
 
-    property string valueText:          fact ? fact.valueString : ""
+    property string valueText:          fact ? fact.valueString : "N/A"
     property double factValue:          Number(valueText)
 
     property double minimumValue:       !fact || isNaN(fact.min) ? 0 : fact.min
@@ -40,9 +40,14 @@ Item {
             newValue = fact.max;
         }
 
-        factValueChangeDelay.stop()
+//        factValueChangeDelay.stop()
         valueText = newValue.toLocaleString(Qt.locale(), 'f', fact.decimalPlaces)
-        factValueChangeDelay.start()
+//        factValueChangeDelay.start()
+
+        fact.value = factValue;
+        fact.valueChanged(fact.value)
+
+        console.log(fact.name, "=", fact.valueString)
     }
 
     Timer {
@@ -53,9 +58,10 @@ Item {
         running: false
 
         onTriggered: {
-            console.log("New value: ", factValue)
             fact.value = factValue;
             fact.valueChanged(fact.value)
+
+            console.log(fact.name, "=", fact.valueString)
         }
     }
 
