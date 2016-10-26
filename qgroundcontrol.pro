@@ -212,6 +212,7 @@ INCLUDEPATH += .
 INCLUDEPATH += \
     include/ui \
     src \
+    src/AnalyzeView \
     src/audio \
     src/AutoPilotPlugins \
     src/comm \
@@ -371,6 +372,8 @@ HEADERS += \
 
 !MobileBuild {
 HEADERS += \
+    src/AnalyzeView/GeoTagController.h \
+    src/AnalyzeView/LogDownloadController.h \
     src/comm/LogReplayLink.h \
     src/comm/QGCFlightGearLink.h \
     src/comm/QGCHilLink.h \
@@ -420,8 +423,6 @@ HEADERS += \
     src/GPS/GPSProvider.h \
     src/ViewWidgets/CustomCommandWidget.h \
     src/ViewWidgets/CustomCommandWidgetController.h \
-    src/ViewWidgets/LogDownload.h \
-    src/ViewWidgets/LogDownloadController.h \
     src/ViewWidgets/ViewWidgetController.h \
 }
 
@@ -525,6 +526,8 @@ contains(DEFINES, QGC_ENABLE_BLUETOOTH) {
 
 !MobileBuild {
 SOURCES += \
+    src/AnalyzeView/GeoTagController.cc \
+    src/AnalyzeView/LogDownloadController.cc \
     src/ui/uas/UASMessageView.cc \
     src/uas/FileManager.cc \
     src/ui/uas/QGCUnconnectedInfoWidget.cc \
@@ -568,8 +571,6 @@ SOURCES += \
     src/GPS/GPSProvider.cc \
     src/ViewWidgets/CustomCommandWidget.cc \
     src/ViewWidgets/CustomCommandWidgetController.cc \
-    src/ViewWidgets/LogDownload.cc \
-    src/ViewWidgets/LogDownloadController.cc \
     src/ViewWidgets/ViewWidgetController.cc
 }
 
@@ -588,6 +589,7 @@ INCLUDEPATH += \
     src/qgcunittest
 
 HEADERS += \
+    src/AnalyzeView/LogDownloadTest.h \
     src/FactSystem/FactSystemTestBase.h \
     src/FactSystem/FactSystemTestGeneric.h \
     src/FactSystem/FactSystemTestPX4.h \
@@ -612,10 +614,9 @@ HEADERS += \
     src/qgcunittest/TCPLinkTest.h \
     src/qgcunittest/TCPLoopBackServer.h \
     src/qgcunittest/UnitTest.h \
-    src/ViewWidgets/LogDownloadTest.h \
-    src/VehicleSetup/SetupViewTest.h \
 
 SOURCES += \
+    src/AnalyzeView/LogDownloadTest.cc \
     src/FactSystem/FactSystemTestBase.cc \
     src/FactSystem/FactSystemTestGeneric.cc \
     src/FactSystem/FactSystemTestPX4.cc \
@@ -641,8 +642,6 @@ SOURCES += \
     src/qgcunittest/TCPLoopBackServer.cc \
     src/qgcunittest/UnitTest.cc \
     src/qgcunittest/UnitTestList.cc \
-    src/ViewWidgets/LogDownloadTest.cc \
-    src/VehicleSetup/SetupViewTest.cc \
 } # !MobileBuild
 } # DebugBuild
 
@@ -668,6 +667,7 @@ HEADERS+= \
     src/AutoPilotPlugins/APM/APMAirframeComponentController.h \
     src/AutoPilotPlugins/APM/APMAirframeComponentAirframes.h \
     src/AutoPilotPlugins/APM/APMCameraComponent.h \
+    src/AutoPilotPlugins/APM/APMLightsComponent.h \
     src/AutoPilotPlugins/APM/APMCompassCal.h \
     src/AutoPilotPlugins/APM/APMFlightModesComponent.h \
     src/AutoPilotPlugins/APM/APMFlightModesComponentController.h \
@@ -732,6 +732,7 @@ SOURCES += \
     src/AutoPilotPlugins/APM/APMAirframeComponent.cc \
     src/AutoPilotPlugins/APM/APMAirframeComponentController.cc \
     src/AutoPilotPlugins/APM/APMCameraComponent.cc \
+    src/AutoPilotPlugins/APM/APMLightsComponent.cc \
     src/AutoPilotPlugins/APM/APMCompassCal.cc \
     src/AutoPilotPlugins/APM/APMFlightModesComponent.cc \
     src/AutoPilotPlugins/APM/APMFlightModesComponentController.cc \

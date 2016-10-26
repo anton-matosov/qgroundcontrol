@@ -83,7 +83,7 @@ public:
     void                pauseVehicle                    (Vehicle* vehicle);
     int                 manualControlReservedButtonCount(void);
     bool                adjustIncomingMavlinkMessage    (Vehicle* vehicle, mavlink_message_t* message) final;
-    void                adjustOutgoingMavlinkMessage    (Vehicle* vehicle, mavlink_message_t* message) final;
+    void                adjustOutgoingMavlinkMessage    (Vehicle* vehicle, LinkInterface* outgoingLink, mavlink_message_t* message) final;
     void                initializeVehicle               (Vehicle* vehicle) final;
     bool                sendHomePositionToVehicle       (void) final;
     void                addMetaDataToFact               (QObject* parameterMetaData, Fact* fact, MAV_TYPE vehicleType) final;
@@ -95,6 +95,7 @@ public:
     QObject*            loadParameterMetaData           (const QString& metaDataFile);
     GeoFenceManager*    newGeoFenceManager              (Vehicle* vehicle) { return new APMGeoFenceManager(vehicle); }
     RallyPointManager*  newRallyPointManager            (Vehicle* vehicle) { return new APMRallyPointManager(vehicle); }
+    QString             brandImage                      (const Vehicle* vehicle) const { Q_UNUSED(vehicle); return QStringLiteral("/qmlimages/APM/BrandImage"); }
 
     QString     getParameterMetaDataFile(Vehicle* vehicle);
 
@@ -114,10 +115,10 @@ private:
     static bool _isTextSeverityAdjustmentNeeded(const APMFirmwareVersion& firmwareVersion);
     void _setInfoSeverity(mavlink_message_t* message) const;
     QString _getMessageText(mavlink_message_t* message) const;
-    void _handleParamValue(Vehicle* vehicle, mavlink_message_t* message);
-    void _handleParamSet(Vehicle* vehicle, mavlink_message_t* message);
-    bool _handleStatusText(Vehicle* vehicle, mavlink_message_t* message);
-    void _handleHeartbeat(Vehicle* vehicle, mavlink_message_t* message);
+    void _handleIncomingParamValue(Vehicle* vehicle, mavlink_message_t* message);
+    bool _handleIncomingStatusText(Vehicle* vehicle, mavlink_message_t* message);
+    void _handleIncomingHeartbeat(Vehicle* vehicle, mavlink_message_t* message);
+    void _handleOutgoingParamSet(Vehicle* vehicle, LinkInterface* outgoingLink, mavlink_message_t* message);
     void _soloVideoHandshake(Vehicle* vehicle);
 
     bool                    _textSeverityAdjustmentNeeded;

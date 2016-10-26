@@ -211,7 +211,7 @@ int APMFirmwarePlugin::manualControlReservedButtonCount(void)
     return -1;
 }
 
-void APMFirmwarePlugin::_handleParamValue(Vehicle* vehicle, mavlink_message_t* message)
+void APMFirmwarePlugin::_handleIncomingParamValue(Vehicle* vehicle, mavlink_message_t* message)
 {
     Q_UNUSED(vehicle);
 
@@ -251,10 +251,17 @@ void APMFirmwarePlugin::_handleParamValue(Vehicle* vehicle, mavlink_message_t* m
 
     paramValue.param_value = paramUnion.param_float;
 
-    mavlink_msg_param_value_encode(message->sysid, message->compid, message, &paramValue);
+    // Re-Encoding is always done using mavlink 1.0
+    mavlink_status_t* mavlinkStatusReEncode = mavlink_get_channel_status(0);
+    mavlinkStatusReEncode->flags |= MAVLINK_STATUS_FLAG_IN_MAVLINK1;
+    mavlink_msg_param_value_encode_chan(message->sysid,
+                                        message->compid,
+                                        0,                  // Re-encoding uses reserved channel 0
+                                        message,
+                                        &paramValue);
 }
 
-void APMFirmwarePlugin::_handleParamSet(Vehicle* vehicle, mavlink_message_t* message)
+void APMFirmwarePlugin::_handleOutgoingParamSet(Vehicle* vehicle, LinkInterface* outgoingLink, mavlink_message_t* message)
 {
     Q_UNUSED(vehicle);
 
@@ -294,10 +301,10 @@ void APMFirmwarePlugin::_handleParamSet(Vehicle* vehicle, mavlink_message_t* mes
         qCCritical(APMFirmwarePluginLog) << "Invalid/Unsupported data type used in parameter:" << paramSet.param_type;
     }
 
-    mavlink_msg_param_set_encode(message->sysid, message->compid, message, &paramSet);
+    mavlink_msg_param_set_encode_chan(message->sysid, message->compid, outgoingLink->mavlinkChannel(), message, &paramSet);
 }
 
-bool APMFirmwarePlugin::_handleStatusText(Vehicle* vehicle, mavlink_message_t* message)
+bool APMFirmwarePlugin::_handleIncomingStatusText(Vehicle* vehicle, mavlink_message_t* message)
 {
     QString messageText;
 
@@ -406,7 +413,7 @@ bool APMFirmwarePlugin::_handleStatusText(Vehicle* vehicle, mavlink_message_t* m
     return true;
 }
 
-void APMFirmwarePlugin::_handleHeartbeat(Vehicle* vehicle, mavlink_message_t* message)
+void APMFirmwarePlugin::_handleIncomingHeartbeat(Vehicle* vehicle, mavlink_message_t* message)
 {
     bool flying = false;
 
@@ -435,19 +442,19 @@ bool APMFirmwarePlugin::adjustIncomingMavlinkMessage(Vehicle* vehicle, mavlink_m
 
     switch (message->msgid) {
     case MAVLINK_MSG_ID_PARAM_VALUE:
-        _handleParamValue(vehicle, message);
+        _handleIncomingParamValue(vehicle, message);
         break;
     case MAVLINK_MSG_ID_STATUSTEXT:
-        return _handleStatusText(vehicle, message);
+        return _handleIncomingStatusText(vehicle, message);
     case MAVLINK_MSG_ID_HEARTBEAT:
-        _handleHeartbeat(vehicle, message);
+        _handleIncomingHeartbeat(vehicle, message);
         break;
     }
 
     return true;
 }
 
-void APMFirmwarePlugin::adjustOutgoingMavlinkMessage(Vehicle* vehicle, mavlink_message_t* message)
+void APMFirmwarePlugin::adjustOutgoingMavlinkMessage(Vehicle* vehicle, LinkInterface* outgoingLink, mavlink_message_t* message)
 {
     //-- Don't process messages to/from UDP Bridge. It doesn't suffer from these issues
     if (message->compid == MAV_COMP_ID_UDP_BRIDGE) {
@@ -456,7 +463,7 @@ void APMFirmwarePlugin::adjustOutgoingMavlinkMessage(Vehicle* vehicle, mavlink_m
 
     switch (message->msgid) {
     case MAVLINK_MSG_ID_PARAM_SET:
-        _handleParamSet(vehicle, message);
+        _handleOutgoingParamSet(vehicle, outgoingLink, message);
         break;
     }
 }
@@ -518,7 +525,14 @@ void APMFirmwarePlugin::_adjustSeverity(mavlink_message_t* message) const
         break;
     }
 
-    mavlink_msg_statustext_encode(message->sysid, message->compid, message, &statusText);
+    // Re-Encoding is always done using mavlink 1.0
+    mavlink_status_t* mavlinkStatusReEncode = mavlink_get_channel_status(0);
+    mavlinkStatusReEncode->flags |= MAVLINK_STATUS_FLAG_IN_MAVLINK1;
+    mavlink_msg_statustext_encode_chan(message->sysid,
+                                       message->compid,
+                                       0,                  // Re-encoding uses reserved channel 0
+                                       message,
+                                       &statusText);
 }
 
 void APMFirmwarePlugin::_setInfoSeverity(mavlink_message_t* message) const
@@ -526,16 +540,26 @@ void APMFirmwarePlugin::_setInfoSeverity(mavlink_message_t* message) const
     mavlink_statustext_t statusText;
     mavlink_msg_statustext_decode(message, &statusText);
 
+    // Re-Encoding is always done using mavlink 1.0
+    mavlink_status_t* mavlinkStatusReEncode = mavlink_get_channel_status(0);
+    mavlinkStatusReEncode->flags |= MAVLINK_STATUS_FLAG_IN_MAVLINK1;
     statusText.severity = MAV_SEVERITY_INFO;
-    mavlink_msg_statustext_encode(message->sysid, message->compid, message, &statusText);
+    mavlink_msg_statustext_encode_chan(message->sysid,
+                                       message->compid,
+                                       0,                  // Re-encoding uses reserved channel 0
+                                       message,
+                                       &statusText);
 }
 
 void APMFirmwarePlugin::_adjustCalibrationMessageSeverity(mavlink_message_t* message) const
 {
     mavlink_statustext_t statusText;
     mavlink_msg_statustext_decode(message, &statusText);
+    // Re-Encoding is always done using mavlink 1.0
+    mavlink_status_t* mavlinkStatusReEncode = mavlink_get_channel_status(0);
+    mavlinkStatusReEncode->flags |= MAVLINK_STATUS_FLAG_IN_MAVLINK1;
     statusText.severity = MAV_SEVERITY_INFO;
-    mavlink_msg_statustext_encode(message->sysid, message->compid, message, &statusText);
+    mavlink_msg_statustext_encode_chan(message->sysid, message->compid, 0, message, &statusText);
 }
 
 void APMFirmwarePlugin::initializeVehicle(Vehicle* vehicle)

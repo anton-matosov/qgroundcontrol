@@ -45,15 +45,16 @@ Rectangle {
     readonly property var   colorBlue:      "#636efe"
     readonly property var   colorWhite:     "#ffffff"
 
-    signal showSettingsView()
-    signal showSetupView()
-    signal showPlanView()
-    signal showFlyView()
+    signal showSettingsView
+    signal showSetupView
+    signal showPlanView
+    signal showFlyView
+    signal showAnalyzeView
 
     MainToolBarController { id: _controller }
 
     function checkSettingsButton() {
-        preferencesButton.checked = true
+        settingsButton.checked = true
     }
 
     function checkSetupButton() {
@@ -66,6 +67,10 @@ Rectangle {
 
     function checkFlyButton() {
         flyButton.checked = true
+    }
+
+    function checkAnalyzeButton() {
+        analyzeButton.checked = true
     }
 
     function getBatteryColor() {
@@ -325,7 +330,7 @@ Rectangle {
         ExclusiveGroup { id: mainActionGroup }
 
         QGCToolBarButton {
-            id:                 preferencesButton
+            id:                 settingsButton
             width:              mainWindow.tbButtonWidth
             anchors.top:        parent.top
             anchors.bottom:     parent.bottom
@@ -364,6 +369,17 @@ Rectangle {
             source:             "/qmlimages/PaperPlane.svg"
             onClicked:          toolBar.showFlyView()
         }
+
+        QGCToolBarButton {
+            id:                 analyzeButton
+            width:              mainWindow.tbButtonWidth
+            anchors.top:        parent.top
+            anchors.bottom:     parent.bottom
+            exclusiveGroup:     mainActionGroup
+            source:             "/qmlimages/Analyze.svg"
+            visible:            !ScreenTools.isMobile
+            onClicked:          toolBar.showAnalyzeView()
+        }
     }
 
     Item {
@@ -377,6 +393,7 @@ Rectangle {
         property bool vehicleConnectionLost: activeVehicle ? activeVehicle.connectionLost : false
 
         Loader {
+            id:                     indicatorLoader
             source:                 activeVehicle && !parent.vehicleConnectionLost ? "MainToolBarIndicators.qml" : ""
             anchors.left:           parent.left
             anchors.verticalCenter: parent.verticalCenter
@@ -392,7 +409,6 @@ Rectangle {
             anchors.right:          disconnectButton.left
             anchors.verticalCenter: parent.verticalCenter
             visible:                parent.vehicleConnectionLost
-
         }
 
         QGCButton {
@@ -405,6 +421,17 @@ Rectangle {
             primary:                true
             onClicked:              activeVehicle.disconnectInactiveVehicle()
         }
+
+        Image {
+            anchors.rightMargin:    ScreenTools.defaultFontPixelWidth / 2
+            anchors.right:          parent.right
+            anchors.top:            parent.top
+            anchors.bottom:         parent.bottom
+            visible:                x > indicatorLoader.x + indicatorLoader.width && !disconnectButton.visible && source != ""
+            fillMode:               Image.PreserveAspectFit
+            source:                 activeVehicle ? activeVehicle.brandImage : ""
+        }
+
     }
 
     // Progress bar

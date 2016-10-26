@@ -159,8 +159,9 @@ public:
     /// This is handy to adjust or differences in mavlink spec implementations such that the base code can remain
     /// mavlink generic.
     ///     @param vehicle Vehicle message came from
+    ///     @param outgoingLink Link that messae is going out on
     ///     @param message[in,out] Mavlink message to adjust if needed.
-    virtual void adjustOutgoingMavlinkMessage(Vehicle* vehicle, mavlink_message_t* message);
+    virtual void adjustOutgoingMavlinkMessage(Vehicle* vehicle, LinkInterface* outgoingLink, mavlink_message_t* message);
 
     /// Determines how to handle the first item of the mission item list. Internally to QGC the first item
     /// is always the home position.
@@ -221,6 +222,9 @@ public:
 
     /// Return the resource file which contains the set of params loaded for offline editing.
     virtual QString offlineEditingParamFile(Vehicle* vehicle) { Q_UNUSED(vehicle); return QString(); }
+
+    /// Return the resource file which contains the brand image for the vehicle.
+    virtual QString brandImage(const Vehicle* vehicle) const { Q_UNUSED(vehicle) return QString(); }
 };
 
 #endif

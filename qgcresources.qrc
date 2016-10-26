@@ -54,8 +54,11 @@
         <file alias="DatalinkLossLight.svg">src/AutoPilotPlugins/PX4/Images/DatalinkLossLight.svg</file>
         <file alias="GeoFence.svg">src/AutoPilotPlugins/PX4/Images/GeoFence.svg</file>
         <file alias="GeoFenceLight.svg">src/AutoPilotPlugins/PX4/Images/GeoFenceLight.svg</file>
+        <file alias="GeoTagIcon">src/AnalyzeView/GeoTagIcon.png</file>
         <file alias="LandMode.svg">src/AutoPilotPlugins/PX4/Images/LandMode.svg</file>
         <file alias="LandModeCopter.svg">src/AutoPilotPlugins/PX4/Images/LandModeCopter.svg</file>
+        <file alias="LightsComponentIcon.png">src/AutoPilotPlugins/APM/Images/LightsComponentIcon.png</file>
+        <file alias="LogDownloadIcon">src/AnalyzeView/LogDownloadIcon.png</file>
         <file alias="LowBattery.svg">src/AutoPilotPlugins/PX4/Images/LowBattery.svg</file>
         <file alias="LowBatteryLight.svg">src/AutoPilotPlugins/PX4/Images/LowBatteryLight.svg</file>
         <file alias="MotorComponentIcon.svg">src/AutoPilotPlugins/Common/Images/MotorComponentIcon.svg</file>
@@ -129,6 +132,7 @@
         <file alias="Disarmed.svg">src/ui/toolbar/Images/Disarmed.svg</file>
         <file alias="Disconnect.svg">src/ui/toolbar/Images/Disconnect.svg</file>
         <file alias="Gears.svg">src/ui/toolbar/Images/Gears.svg</file>
+        <file alias="Analyze.svg">src/ui/toolbar/Images/Analyze.svg</file>
         <file alias="Gps.svg">src/ui/toolbar/Images/Gps.svg</file>
         <file alias="Hamburger.svg">src/ui/toolbar/Images/Hamburger.svg</file>
         <file alias="Megaphone.svg">src/ui/toolbar/Images/Megaphone.svg</file>
@@ -150,6 +154,9 @@
         <file alias="ArrowDirection.svg">src/AutoPilotPlugins/Common/Images/ArrowDirection.svg</file>
         <file alias="ArrowCW.svg">src/AutoPilotPlugins/Common/Images/ArrowCW.svg</file>
         <file alias="ArrowCCW.svg">src/AutoPilotPlugins/Common/Images/ArrowCCW.svg</file>
+        <file alias="APM/BrandImage">src/FirmwarePlugin/APM/APMBrandImage.png</file>
+        <file alias="APM/BrandImageSub">src/FirmwarePlugin/APM/APMBrandImageSub.png</file>
+        <file alias="PX4/BrandImage">src/FirmwarePlugin/PX4/PX4BrandImage.png</file>
     </qresource>
     <qresource prefix="/res">
         <file alias="AntennaRC">resources/Antenna_RC.svg</file>
@@ -247,6 +254,9 @@
         <file alias="joystickYawRight.png">resources/calibration/joystick/joystickYawRight.png</file>
         <file alias="joystickThrottleUp.png">resources/calibration/joystick/joystickThrottleUp.png</file>
         <file alias="joystickThrottleDown.png">resources/calibration/joystick/joystickThrottleDown.png</file>
+    </qresource>
+    <qresource prefix="/db/mapping/joystick">
+        <file alias="gamecontrollerdb.txt">resources/SDL_GameControllerDB/gamecontrollerdb.txt</file>
     </qresource>
     <qresource prefix="/res/styles">
         <file alias="style-dark.css">resources/styles/style-dark.css</file>
